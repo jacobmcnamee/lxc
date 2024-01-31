@@ -548,6 +548,17 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 			}
 		}
 
+		/*
+		 * Avoid IPv6 link-local address generation on the host's veth
+		 * device. This may fail if IPv6 support is not enabled.
+		 */
+		ret = lxc_ipv6_disable(veth1buf);
+		if (ret && errno != ENOENT) {
+			usernic_error("Failed to disable IPv6 for %s\n",
+				      veth1buf);
+			goto out_del;
+		}
+
 		/* attach veth1 to bridge */
 		ret = lxc_bridge_attach(br, veth1buf);
 		if (ret < 0) {

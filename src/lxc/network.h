@@ -252,6 +252,9 @@ __hidden extern int lxc_ip_forwarding_on(const char *name, int family);
 /* Disable IP forwarding. */
 __hidden extern int lxc_ip_forwarding_off(const char *name, int family);
 
+/* Disable IPv6 for an interface. */
+__hidden extern int lxc_ipv6_disable(const char *ifname);
+
 /*
  * Generate a new unique network interface name.
  *

@@ -2405,6 +2405,19 @@ int lxc_neigh_proxy_off(const char *name, int family)
 	return neigh_proxy_set(name, family, 0);
 }
 
+int lxc_ipv6_disable(const char *ifname)
+{
+	int ret;
+	char path[PATH_MAX];
+
+	ret = strnprintf(path, sizeof(path),
+			 "/proc/sys/net/ipv6/conf/%s/disable_ipv6", ifname);
+	if (ret < 0)
+		return ret_set_errno(-1, E2BIG);
+
+	return proc_sys_net_write(path, "1");
+}
+
 int lxc_convert_mac(char *macaddr, struct sockaddr *sockaddr)
 {
 	int i = 0;

@@ -465,30 +465,6 @@ static char *find_line(char *buf_start, char *buf_end, char *name,
 	return NULL;
 }
 
-static int instantiate_veth(char *veth1, char *veth2, pid_t pid, unsigned int mtu)
-{
-	int ret;
-
-	ret = lxc_veth_create(veth1, veth2, pid, mtu, -1, -1);
-	if (ret < 0) {
-		CMD_SYSERROR("Failed to create %s-%s\n", veth1, veth2);
-		return ret_errno(-ret);
-	}
-
-	/*
-	 * Changing the high byte of the mac address to 0xfe, the bridge
-	 * interface will always keep the host's mac address and not take the
-	 * mac address of a container.
-	 */
-	ret = setup_private_host_hw_addr(veth1);
-	if (ret < 0) {
-		CMD_SYSERROR("Failed to change mac address of host interface %s\n", veth1);
-		return ret_errno(-ret);
-	}
-
-	return 0;
-}
-
 #define NETDEV_MTU_DEFAULT 1500
 
 static unsigned int get_mtu(char *name)
@@ -532,10 +508,23 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 		mtu = get_mtu(br);
 
 	/* create the nics */
-	ret = instantiate_veth(veth1buf, veth2buf, pid, mtu);
+	ret = lxc_veth_create(veth1buf, veth2buf, pid, mtu, -1, -1);
 	if (ret < 0) {
-		usernic_error("%s", "Error creating veth tunnel\n");
+		usernic_error("Failed to create veth pair %s-%s\n",
+			      veth1buf, veth2buf);
 		return -1;
+	}
+
+	/*
+	 * Changing the high byte of the mac address to 0xfe, the bridge
+	 * interface will always keep the host's mac address and not take the
+	 * mac address of a container.
+	 */
+	ret = setup_private_host_hw_addr(veth1buf);
+	if (ret < 0) {
+		usernic_error("Failed to change mac address of host interface %s\n",
+			      veth1buf);
+		goto out_del;
 	}
 
 	if (mtu > 0) {
@@ -576,7 +565,7 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 	*cnic = strdup(veth2buf);
 	if (!*cnic) {
 		usernic_error("Failed to copy string \"%s\"\n", veth2buf);
-		return -1;
+		goto out_del;
 	}
 
 	return 0;

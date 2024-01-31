@@ -538,16 +538,16 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 		return -1;
 	}
 
-	if (strcmp(br, "none")) {
-		if (mtu > 0) {
-			ret = lxc_netdev_set_mtu(veth1buf, mtu);
-			if (ret < 0) {
-				usernic_error("Failed to set mtu to %d on %s\n",
-					      mtu, veth1buf);
-				goto out_del;
-			}
+	if (mtu > 0) {
+		ret = lxc_netdev_set_mtu(veth1buf, mtu);
+		if (ret < 0) {
+			usernic_error("Failed to set mtu to %d on %s\n",
+				      mtu, veth1buf);
+			goto out_del;
 		}
+	}
 
+	if (strcmp(br, "none")) {
 		/*
 		 * Avoid IPv6 link-local address generation on the host's veth
 		 * device. This may fail if IPv6 support is not enabled.

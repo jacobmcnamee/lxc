@@ -486,7 +486,7 @@ static int instantiate_veth(char *veth1, char *veth2, pid_t pid, unsigned int mt
 		return ret_errno(-ret);
 	}
 
-	return netdev_set_flag(veth1, IFF_UP);
+	return 0;
 }
 
 #define NETDEV_MTU_DEFAULT 1500
@@ -565,6 +565,12 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 			usernic_error("Error attaching %s to %s\n", veth1buf, br);
 			goto out_del;
 		}
+	}
+
+	ret = lxc_netdev_up(veth1buf);
+	if (ret) {
+		usernic_error("Failed to set %s up\n", veth1buf);
+		goto out_del;
 	}
 
 	*cnic = strdup(veth2buf);

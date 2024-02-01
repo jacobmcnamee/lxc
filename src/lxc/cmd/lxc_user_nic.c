@@ -509,7 +509,7 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 
 	/* create the nics */
 	ret = lxc_veth_create(veth1buf, veth2buf, pid, mtu, -1, -1);
-	if (ret < 0) {
+	if (ret) {
 		usernic_error("Failed to create veth pair %s-%s\n",
 			      veth1buf, veth2buf);
 		return -1;
@@ -521,7 +521,7 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 	 * mac address of a container.
 	 */
 	ret = setup_private_host_hw_addr(veth1buf);
-	if (ret < 0) {
+	if (ret) {
 		usernic_error("Failed to change mac address of host interface %s\n",
 			      veth1buf);
 		goto out_del;
@@ -529,7 +529,7 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 
 	if (mtu > 0) {
 		ret = lxc_netdev_set_mtu(veth1buf, mtu);
-		if (ret < 0) {
+		if (ret) {
 			usernic_error("Failed to set mtu to %d on %s\n",
 				      mtu, veth1buf);
 			goto out_del;
@@ -550,7 +550,7 @@ static int create_nic(char *nic, char *br, int pid, char **cnic)
 
 		/* attach veth1 to bridge */
 		ret = lxc_bridge_attach(br, veth1buf);
-		if (ret < 0) {
+		if (ret) {
 			usernic_error("Error attaching %s to %s\n", veth1buf, br);
 			goto out_del;
 		}
